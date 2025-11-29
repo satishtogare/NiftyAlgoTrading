@@ -1,0 +1,3087 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataSchemaModel FileFormatVersion="1.2" SchemaVersion="2.9" DspName="Microsoft.Data.Tools.Schema.Sql.Sql170DatabaseSchemaProvider" CollationLcid="1033" CollationCaseSensitive="False" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+	<Header>
+		<CustomData Category="AnsiNulls">
+			<Metadata Name="AnsiNulls" Value="True" />
+		</CustomData>
+		<CustomData Category="QuotedIdentifier">
+			<Metadata Name="QuotedIdentifier" Value="True" />
+		</CustomData>
+		<CustomData Category="CompatibilityMode">
+			<Metadata Name="CompatibilityMode" Value="170" />
+		</CustomData>
+		<CustomData Category="Reference" Type="Assembly">
+			<Metadata Name="LogicalName" Value="NiftyOptionServiceDB.dll" />
+			<Metadata Name="FileName" Value="D:\WORKINGFOLDER\OPTIONCHAINSERVICE\SRC\NIFTYOPTIONSERVICEDB\OBJ\DEBUG\NIFTYOPTIONSERVICEDB.DLL" />
+			<Metadata Name="AssemblyName" Value="NiftyOptionServiceDB" />
+			<Metadata Name="PermissionSet" Value="SAFE" />
+			<Metadata Name="Owner" Value="" />
+			<Metadata Name="GenerateSqlClrDdl" Value="True" />
+			<Metadata Name="IsVisible" Value="True" />
+			<Metadata Name="IsModelAware" Value="True" />
+			<Metadata Name="SkipCreationIfEmpty" Value="True" />
+			<Metadata Name="AssemblySymbolsName" Value="D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\NiftyOptionServiceDB.pdb" />
+		</CustomData>
+		<CustomData Category="SqlCmdVariables" Type="SqlCmdVariable" />
+	</Header>
+	<Model>
+		<Element Type="SqlDatabaseOptions">
+			<Property Name="Collation" Value="SQL_Latin1_General_CP1_CI_AS" />
+			<Property Name="IsAnsiNullDefaultOn" Value="True" />
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Property Name="IsAnsiWarningsOn" Value="True" />
+			<Property Name="IsArithAbortOn" Value="True" />
+			<Property Name="IsConcatNullYieldsNullOn" Value="True" />
+			<Property Name="IsTornPageProtectionOn" Value="False" />
+			<Property Name="IsFullTextEnabled" Value="True" />
+			<Property Name="PageVerifyMode" Value="3" />
+			<Property Name="DefaultLanguage" Value="" />
+			<Property Name="DefaultFullTextLanguage" Value="" />
+			<Property Name="QueryStoreStaleQueryThreshold" Value="367" />
+			<Relationship Name="DefaultFilegroup">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[PRIMARY]" />
+				</Entry>
+			</Relationship>
+		</Element>
+		<Element Type="SqlDefaultConstraint">
+			<Property Name="DefaultExpressionScript">
+				<Value><![CDATA[(getdate())]]></Value>
+			</Property>
+			<Relationship Name="DefiningTable">
+				<Entry>
+					<References Name="[dbo].[OptionData]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="ForColumn">
+				<Entry>
+					<References Name="[dbo].[OptionData].[CreatedAt]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SqlInlineConstraintAnnotation" Disambiguator="3" />
+		</Element>
+		<Element Type="SqlDefaultConstraint">
+			<Property Name="DefaultExpressionScript">
+				<Value><![CDATA[(sysutcdatetime())]]></Value>
+			</Property>
+			<Relationship Name="DefiningTable">
+				<Entry>
+					<References Name="[dbo].[ScalpSignal]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="ForColumn">
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[GeneratedAt]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SqlInlineConstraintAnnotation" Disambiguator="4" />
+		</Element>
+		<Element Type="SqlPrimaryKeyConstraint">
+			<Relationship Name="ColumnSpecifications">
+				<Entry>
+					<Element Type="SqlIndexedColumnSpecification">
+						<Relationship Name="Column">
+							<Entry>
+								<References Name="[dbo].[OptionChainRaw].[Id]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="DefiningTable">
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SqlInlineConstraintAnnotation" Disambiguator="5" />
+		</Element>
+		<Element Type="SqlPrimaryKeyConstraint">
+			<Relationship Name="ColumnSpecifications">
+				<Entry>
+					<Element Type="SqlIndexedColumnSpecification">
+						<Relationship Name="Column">
+							<Entry>
+								<References Name="[dbo].[OptionData].[Id]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="DefiningTable">
+				<Entry>
+					<References Name="[dbo].[OptionData]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SqlInlineConstraintAnnotation" Disambiguator="6" />
+		</Element>
+		<Element Type="SqlPrimaryKeyConstraint">
+			<Relationship Name="ColumnSpecifications">
+				<Entry>
+					<Element Type="SqlIndexedColumnSpecification">
+						<Relationship Name="Column">
+							<Entry>
+								<References Name="[dbo].[ScalpSignal].[Id]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="DefiningTable">
+				<Entry>
+					<References Name="[dbo].[ScalpSignal]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SqlInlineConstraintAnnotation" Disambiguator="7" />
+		</Element>
+		<Element Type="SqlProcedure" Name="[dbo].[GenerateScalpSignals]">
+			<Property Name="BodyScript">
+				<Value><![CDATA[  
+BEGIN  
+    SET NOCOUNT ON;  
+  
+    DECLARE @MaxTimeStamp DATETIME;  
+    SELECT @MaxTimeStamp = MAX(CreatedAt)  
+    FROM dbo.OptionData;  
+  
+    ;WITH recent AS  
+    (  
+        SELECT *  
+        FROM dbo.OptionData  
+        WHERE CreatedAt >= DATEADD(MINUTE, -ABS(@LookbackMinutes), @MaxTimeStamp)  
+    ),  
+    ranked AS  
+    (  
+        SELECT *,  
+               ROW_NUMBER() OVER (PARTITION BY StrikePrice, OptionType ORDER BY CreatedAt DESC, Id DESC) AS rn  
+        FROM recent  
+    ),  
+    latest AS  
+    (  
+        SELECT * FROM ranked WHERE rn = 1  
+    ),  
+    previous AS  
+    (  
+        SELECT * FROM ranked WHERE rn = 2  
+    ),  
+    joined AS  
+    (  
+        SELECT  
+            L.Id AS OptionDataId,  
+            L.StrikePrice,  
+            L.OptionType,  
+            L.LastPrice,  
+            P.LastPrice AS PrevLastPrice,  
+            L.OI,  
+            P.OI AS PrevOI,  
+            L.Volume,  
+            P.Volume AS PrevVolume,  
+            L.ImpliedVolatility,  
+            P.ImpliedVolatility AS PrevImpliedVolatility,  
+            L.Delta,  
+            L.Gamma,  
+            L.Vega,  
+            L.CreatedAt,  
+            CASE WHEN P.LastPrice IS NULL OR P.LastPrice = 0 THEN 0   
+                 ELSE (L.LastPrice - P.LastPrice) * 100.0 / P.LastPrice END AS PricePct,  
+            CASE WHEN P.OI IS NULL OR P.OI = 0 THEN 0   
+                 ELSE (L.OI - P.OI) * 100.0 / P.OI END AS OIPct,  
+            CASE WHEN P.Volume IS NULL OR P.Volume = 0 THEN 0   
+                 ELSE (L.Volume - P.Volume) * 100.0 / P.Volume END AS VolumePct,  
+            CASE WHEN P.ImpliedVolatility IS NULL OR P.ImpliedVolatility = 0 THEN 0   
+                 ELSE (L.ImpliedVolatility - P.ImpliedVolatility) * 100.0 / P.ImpliedVolatility END AS IVPct  
+        FROM latest L  
+        LEFT JOIN previous P   
+            ON L.StrikePrice = P.StrikePrice  
+           AND L.OptionType = P.OptionType  
+    ),  
+    sr AS  
+    (  
+        SELECT  
+            (SELECT TOP 1 StrikePrice FROM latest WHERE OptionType = 'ce' ORDER BY OI DESC) AS ResistanceStrike,  
+            (SELECT TOP 1 StrikePrice FROM latest WHERE OptionType = 'pe' ORDER BY OI DESC) AS SupportStrike  
+    )  
+  
+    INSERT INTO dbo.ScalpSignal  
+    (  
+        OptionDataId,  
+        StrikePrice,  
+        OptionType,  
+        SignalType,  
+        SignalScore,  
+        LastPrice,  
+        PrevLastPrice,  
+        PricePctChange,  
+        OI,  
+        PrevOI,  
+        OIPctChange,  
+        Volume,  
+        PrevVolume,  
+        VolumePctChange,  
+        ImpliedVolatility,  
+        PrevImpliedVolatility,  
+        IVPctChange,  
+        Delta,  
+        Gamma,  
+        Vega,  
+        CreatedAt  
+    )  
+    SELECT  
+        j.OptionDataId,  
+        j.StrikePrice,  
+        j.OptionType,  
+        CASE  
+            WHEN j.OptionType = 'ce' AND j.PricePct > @PricePctThreshold*2 THEN 'BUY_CE_STRONG'  
+            WHEN j.OptionType = 'pe' AND j.PricePct > @PricePctThreshold*2 THEN 'BUY_PE_STRONG'  
+            WHEN j.OptionType = 'ce' THEN 'BUY_CE'  
+            WHEN j.OptionType = 'pe' THEN 'BUY_PE'  
+        END AS SignalType,  
+        CAST(  
+            (ABS(j.PricePct)/NULLIF(@PricePctThreshold,0))*0.4 +  
+            (ABS(j.OIPct)/NULLIF(@OIPctThreshold,0))*0.4 +  
+            (ABS(j.VolumePct)/10.0)*0.2  
+        AS DECIMAL(8,4)) AS SignalScore,  
+        j.LastPrice,  
+        j.PrevLastPrice,  
+        j.PricePct,  
+        j.OI,  
+        j.PrevOI,  
+        j.OIPct,  
+        j.Volume,  
+        j.PrevVolume,  
+        j.VolumePct,  
+        j.ImpliedVolatility,  
+        j.PrevImpliedVolatility,  
+        j.IVPct,  
+        j.Delta,  
+        j.Gamma,  
+        j.Vega,  
+        j.CreatedAt  
+    FROM joined j  
+    CROSS JOIN sr  
+    WHERE  
+        (  
+            -- 🔹 Type 1: Breakout BUY_CE  
+            (j.OptionType = 'ce'  
+             AND j.PricePct > @PricePctThreshold  
+             AND j.OIPct > @OIPctThreshold  
+             AND j.StrikePrice >= sr.ResistanceStrike  
+             AND j.Volume >= @MinVolume  
+             AND j.Delta > 0.35  
+             AND ((j.PricePct + j.OIPct + j.VolumePct) / 3.0) > 2.0  
+            )  
+         OR  
+            -- 🔹 Type 2: Breakout BUY_PE  
+            (j.OptionType = 'pe'  
+             AND j.PricePct > @PricePctThreshold  
+             AND j.OIPct > @OIPctThreshold  
+             AND j.StrikePrice <= sr.SupportStrike  
+             AND j.Volume >= @MinVolume  
+             AND ABS(j.Delta) > 0.35  
+             AND ((j.PricePct + j.OIPct + j.VolumePct) / 3.0) > 2.0  
+            )  
+         OR  
+            -- 🔹 Type 3: Momentum continuation (CE or PE with high OI & IV jump)  
+            ((j.OptionType IN ('ce','pe'))  
+             AND j.PricePct > @PricePctThreshold * 1.5  
+             AND j.OIPct > @OIPctThreshold * 1.5  
+             AND j.IVPct > 1.0  
+             AND j.Volume >= @MinVolume * 1.5  
+            )  
+         OR  
+            -- 🔹 Type 4: Reversal bounce (support-based PE or resistance-based CE)  
+            ((j.OptionType = 'pe' AND j.StrikePrice <= sr.SupportStrike AND j.PricePct > 1.0 AND j.OIPct > 0.5)  
+             OR  
+             (j.OptionType = 'ce' AND j.StrikePrice >= sr.ResistanceStrike AND j.PricePct > 1.0 AND j.OIPct > 0.5)  
+            )  
+        )  
+    AND NOT EXISTS (SELECT 1 FROM dbo.ScalpSignal s WHERE s.OptionDataId = j.OptionDataId);  
+END;]]></Value>
+			</Property>
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="BodyDependencies">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[datetime]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[CreatedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[GenerateScalpSignals].[@LookbackMinutes]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Id]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Id]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Delta]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Gamma]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Vega]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[CreatedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[OptionDataId]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[SignalType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[SignalScore]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[PrevLastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[PricePctChange]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[PrevOI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[OIPctChange]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[PrevVolume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[VolumePctChange]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[PrevImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[IVPctChange]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[Delta]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[Gamma]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[Vega]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[CreatedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Id]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[GenerateScalpSignals].[@PricePctThreshold]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[decimal]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[GenerateScalpSignals].[@OIPctThreshold]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Delta]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Gamma]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Vega]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[CreatedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[GenerateScalpSignals].[@MinVolume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[ScalpSignal].[OptionDataId]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Id]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="DynamicObjects">
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Id]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Id]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[StrikePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[StrikePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[OptionType]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OptionType]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[ImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[LastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[OI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[PreviousClosePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousClosePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[PreviousOI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousOI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[PreviousVolume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousVolume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[TopAskPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[TopAskQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[TopBidPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[TopBidQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Volume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Delta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Delta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Theta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Theta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Gamma]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Gamma]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Vega]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Vega]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[UnderlyingValue]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[UnderlyingValue]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[Underlying]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Underlying]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[recent].[CreatedAt]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[CreatedAt]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Id]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Id]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[StrikePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[StrikePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[OptionType]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OptionType]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[ImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[LastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[OI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[PreviousClosePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousClosePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[PreviousOI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousOI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[PreviousVolume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousVolume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[TopAskPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[TopAskQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[TopBidPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[TopBidQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Volume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Delta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Delta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Theta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Theta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Gamma]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Gamma]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Vega]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Vega]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[UnderlyingValue]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[UnderlyingValue]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[Underlying]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Underlying]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[CreatedAt]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[CreatedAt]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[ranked].[rn]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Id]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Id]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[StrikePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[StrikePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[OptionType]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OptionType]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[ImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[LastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[OI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[PreviousClosePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousClosePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[PreviousOI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousOI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[PreviousVolume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousVolume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[TopAskPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[TopAskQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[TopBidPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[TopBidQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Volume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Delta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Delta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Theta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Theta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Gamma]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Gamma]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Vega]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Vega]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[UnderlyingValue]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[UnderlyingValue]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[Underlying]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Underlying]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[CreatedAt]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[CreatedAt]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[latest].[rn]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Id]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Id]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[StrikePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[StrikePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[OptionType]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OptionType]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[ImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[LastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[OI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[PreviousClosePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousClosePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[PreviousOI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousOI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[PreviousVolume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[PreviousVolume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[TopAskPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[TopAskQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopAskQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[TopBidPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[TopBidQuantity]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[TopBidQuantity]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Volume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Delta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Delta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Theta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Theta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Gamma]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Gamma]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Vega]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Vega]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[UnderlyingValue]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[UnderlyingValue]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[Underlying]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Underlying]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[CreatedAt]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[CreatedAt]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[previous].[rn]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[OptionDataId]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Id]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[StrikePrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[StrikePrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[OptionType]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OptionType]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[LastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[PrevLastPrice]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[LastPrice]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[OI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[PrevOI]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[OI]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[Volume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[PrevVolume]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Volume]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[ImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[PrevImpliedVolatility]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[Delta]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Delta]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[Gamma]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Gamma]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[Vega]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[Vega]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[CreatedAt]">
+									<Relationship Name="ExpressionDependencies">
+										<Entry>
+											<References Name="[dbo].[OptionData].[CreatedAt]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[PricePct]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[OIPct]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[VolumePct]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[joined].[IVPct]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[GenerateScalpSignals].[CTE1].[sr]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[sr].[ResistanceStrike]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[GenerateScalpSignals].[CTE1].[sr].[SupportStrike]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Parameters">
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[GenerateScalpSignals].[@PricePctThreshold]">
+						<Property Name="DefaultExpressionScript">
+							<Value><![CDATA[2.0]]></Value>
+						</Property>
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="3" />
+									<Property Name="Precision" Value="6" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[GenerateScalpSignals].[@OIPctThreshold]">
+						<Property Name="DefaultExpressionScript">
+							<Value><![CDATA[1.0]]></Value>
+						</Property>
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="3" />
+									<Property Name="Precision" Value="6" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[GenerateScalpSignals].[@MinVolume]">
+						<Property Name="DefaultExpressionScript">
+							<Value><![CDATA[1000]]></Value>
+						</Property>
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[GenerateScalpSignals].[@LookbackMinutes]">
+						<Property Name="DefaultExpressionScript">
+							<Value><![CDATA[10]]></Value>
+						</Property>
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SysCommentsObjectAnnotation">
+				<Property Name="Length" Value="5822" />
+				<Property Name="StartLine" Value="1" />
+				<Property Name="StartColumn" Value="1" />
+				<Property Name="HeaderContents" Value="CREATE PROCEDURE [dbo].[GenerateScalpSignals]  &#xD;&#xA;    @PricePctThreshold DECIMAL(6,3) = 2.0,  &#xD;&#xA;    @OIPctThreshold DECIMAL(6,3) = 1.0,  &#xD;&#xA;    @MinVolume BIGINT = 1000,  &#xD;&#xA;    @LookbackMinutes INT = 10  &#xD;&#xA;AS" />
+			</Annotation>
+		</Element>
+		<Element Type="SqlProcedure" Name="[dbo].[generateSingalLoop]">
+			<Property Name="BodyScript">
+				<Value><![CDATA[
+BEGIN 
+CREATE TABLE #OptionTemp
+(
+    rowId BIGINT IDENTITY(1,1),
+    id INT,
+    FetchedAt DATETIME,
+    JsonData NVARCHAR(MAX),
+    Underlying VARCHAR(50)
+);
+
+INSERT INTO #OptionTemp (id, FetchedAt, JsonData, Underlying)
+SELECT   Id, FetchedAt, JsonData, 'NIFTY' AS Underlying
+FROM OptionChainRaw 
+WHERE isProcessed IS NULL 
+ORDER BY FetchedAt ASC;
+
+DECLARE @MinId BIGINT, @MaxId BIGINT;
+
+SELECT @MinId = MIN(RowId), @MaxId = MAX(RowId)
+FROM #OptionTemp;
+
+WHILE @MinId <= @MaxId
+BEGIN
+    DECLARE @Json NVARCHAR(MAX);
+    DECLARE @FetchAt DATETIME;
+    DECLARE @Underlying VARCHAR(50);
+    DECLARE @id INT;
+
+    SELECT 
+        @Json = JsonData,
+        @FetchAt = FetchedAt,
+        @Underlying = Underlying,
+        @id = id
+    FROM #OptionTemp 
+    WHERE RowId = @MinId;
+     
+    EXEC [dbo].[InsertOptionDataFromJson]
+        @Json = @Json,
+        @FetchAt = @FetchAt,
+        @Underlying = @Underlying;
+         
+    EXEC [dbo].[GenerateScalpSignals]
+
+    UPDATE OptionChainRaw
+    SET isProcessed = 1
+    WHERE Id = @id;
+
+    SET @MinId = @MinId + 1;
+END
+
+END]]></Value>
+			</Property>
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="BodyDependencies">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[bigint]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[bigint]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[datetime]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[varchar]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[int]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp].[id]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp].[FetchedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp].[JsonData]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp].[Underlying]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw].[Id]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw].[FetchedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw].[JsonData]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionChainRaw].[isProcessed]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[generateSingalLoop].[#OptionTemp].[rowId]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson].[@Json]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson].[@FetchAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson].[@Underlying]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[GenerateScalpSignals]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="DynamicObjects">
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[generateSingalLoop].[#OptionTemp]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlSimpleColumn" Name="[dbo].[generateSingalLoop].[#OptionTemp].[rowId]">
+									<Property Name="IsNullable" Value="False" />
+									<Property Name="IsIdentity" Value="True" />
+									<Relationship Name="TypeSpecifier">
+										<Entry>
+											<Element Type="SqlTypeSpecifier">
+												<Relationship Name="Type">
+													<Entry>
+														<References ExternalSource="BuiltIns" Name="[bigint]" />
+													</Entry>
+												</Relationship>
+											</Element>
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlSimpleColumn" Name="[dbo].[generateSingalLoop].[#OptionTemp].[id]">
+									<Relationship Name="TypeSpecifier">
+										<Entry>
+											<Element Type="SqlTypeSpecifier">
+												<Relationship Name="Type">
+													<Entry>
+														<References ExternalSource="BuiltIns" Name="[int]" />
+													</Entry>
+												</Relationship>
+											</Element>
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlSimpleColumn" Name="[dbo].[generateSingalLoop].[#OptionTemp].[FetchedAt]">
+									<Relationship Name="TypeSpecifier">
+										<Entry>
+											<Element Type="SqlTypeSpecifier">
+												<Relationship Name="Type">
+													<Entry>
+														<References ExternalSource="BuiltIns" Name="[datetime]" />
+													</Entry>
+												</Relationship>
+											</Element>
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlSimpleColumn" Name="[dbo].[generateSingalLoop].[#OptionTemp].[JsonData]">
+									<Relationship Name="TypeSpecifier">
+										<Entry>
+											<Element Type="SqlTypeSpecifier">
+												<Property Name="IsMax" Value="True" />
+												<Relationship Name="Type">
+													<Entry>
+														<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+													</Entry>
+												</Relationship>
+											</Element>
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+							<Entry>
+								<Element Type="SqlSimpleColumn" Name="[dbo].[generateSingalLoop].[#OptionTemp].[Underlying]">
+									<Relationship Name="TypeSpecifier">
+										<Entry>
+											<Element Type="SqlTypeSpecifier">
+												<Property Name="Length" Value="50" />
+												<Relationship Name="Type">
+													<Entry>
+														<References ExternalSource="BuiltIns" Name="[varchar]" />
+													</Entry>
+												</Relationship>
+											</Element>
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SysCommentsObjectAnnotation">
+				<Property Name="Length" Value="1163" />
+				<Property Name="StartLine" Value="1" />
+				<Property Name="StartColumn" Value="1" />
+				<Property Name="HeaderContents" Value="CREATE PROC [dbo].[generateSingalLoop]&#xD;&#xA;AS" />
+			</Annotation>
+		</Element>
+		<Element Type="SqlProcedure" Name="[dbo].[InsertOptionDataFromJson]">
+			<Property Name="BodyScript">
+				<Value><![CDATA[      
+BEGIN      
+    SET NOCOUNT ON;      
+    
+     
+ ;WITH CTE  
+ AS  
+ (  
+    SELECT     
+        TRY_CAST(REPLACE(oc.[key], '.000000', '') AS DECIMAL(18,2)) AS StrikePrice,    
+        opt.OptionType,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.implied_volatility')) AS DECIMAL(18,8)) AS ImpliedVolatility,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.last_price')) AS DECIMAL(18,8)) AS LastPrice,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.oi')) AS BIGINT) AS OI,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.previous_close_price')) AS DECIMAL(18,8)) AS PreviousClosePrice,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.previous_oi')) AS BIGINT) AS PreviousOI,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.previous_volume')) AS BIGINT) AS PreviousVolume,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.top_ask_price')) AS DECIMAL(18,8)) AS TopAskPrice,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.top_ask_quantity')) AS BIGINT) AS TopAskQuantity,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.top_bid_price')) AS DECIMAL(18,8)) AS TopBidPrice,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.top_bid_quantity')) AS BIGINT) AS TopBidQuantity,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.volume')) AS BIGINT) AS Volume,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.greeks.delta')) AS DECIMAL(18,8)) AS Delta,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.greeks.theta')) AS DECIMAL(18,8)) AS Theta,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.greeks.gamma')) AS DECIMAL(18,8)) AS Gamma,    
+        TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.greeks.vega')) AS DECIMAL(18,8)) AS Vega,
+		TRY_CAST(JSON_VALUE(@Json, '$.data.last_price') AS DECIMAL(18,8)) AS RootLastPrice
+    FROM OPENJSON(@Json, '$.data.oc') AS oc    
+    CROSS APPLY (VALUES ('ce'), ('pe')) AS opt(OptionType)    
+  --WHERE TRY_CAST(JSON_VALUE(oc.value, CONCAT('$.', opt.OptionType, '.last_price')) AS DECIMAL(18,8)) > 1;    
+  )  , Filtered AS
+    (
+        SELECT *,
+               ABS(CAST(StrikePrice AS INT) - CAST(RootLastPrice AS INT)) AS DistanceFromATM
+        FROM CTE
+        --WHERE Volume > 1.00
+    )
+  
+   ---- Extract all strike prices    
+    INSERT INTO OptionData (    
+        StrikePrice, OptionType,    
+        ImpliedVolatility, LastPrice, OI,    
+        PreviousClosePrice, PreviousOI, PreviousVolume,    
+        TopAskPrice, TopAskQuantity, TopBidPrice, TopBidQuantity, Volume,    
+   Delta, Theta, Gamma, Vega  ,
+   UnderlyingValue,
+   Underlying,CreatedAt  
+    )    
+ SELECT  StrikePrice, OptionType,    
+        ImpliedVolatility, LastPrice, OI,    
+        PreviousClosePrice, PreviousOI, PreviousVolume,    
+        TopAskPrice, TopAskQuantity, TopBidPrice, TopBidQuantity, Volume,    
+   Delta, Theta, Gamma, Vega, 
+   RootLastPrice,
+   'NIFTY',@FetchAt 
+   FROM Filtered  
+ WHERE DistanceFromATM<=50
+  
+  
+END;]]></Value>
+			</Property>
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="BodyDependencies">
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson].[@Json]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[int]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[int]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[StrikePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OptionType]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[ImpliedVolatility]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[LastPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[OI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[PreviousClosePrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[PreviousOI]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[PreviousVolume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[TopAskPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[TopAskQuantity]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[TopBidPrice]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[TopBidQuantity]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Volume]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Delta]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Theta]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Gamma]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Vega]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[UnderlyingValue]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[Underlying]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[OptionData].[CreatedAt]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[InsertOptionDataFromJson].[@FetchAt]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="DynamicObjects">
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[StrikePrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[OptionType]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[ImpliedVolatility]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[LastPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[OI]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[PreviousClosePrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[PreviousOI]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[PreviousVolume]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[TopAskPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[TopAskQuantity]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[TopBidPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[TopBidQuantity]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[Volume]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[Delta]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[Theta]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[Gamma]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[Vega]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[CTE].[RootLastPrice]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlDynamicColumnSource" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered]">
+						<Relationship Name="Columns">
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[StrikePrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[OptionType]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[ImpliedVolatility]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[LastPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[OI]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[PreviousClosePrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[PreviousOI]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[PreviousVolume]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[TopAskPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[TopAskQuantity]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[TopBidPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[TopBidQuantity]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[Volume]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[Delta]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[Theta]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[Gamma]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[Vega]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[RootLastPrice]" />
+							</Entry>
+							<Entry>
+								<Element Type="SqlComputedColumn" Name="[dbo].[InsertOptionDataFromJson].[CTE1].[Filtered].[DistanceFromATM]" />
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Parameters">
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[InsertOptionDataFromJson].[@Json]">
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="IsMax" Value="True" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[InsertOptionDataFromJson].[@FetchAt]">
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[InsertOptionDataFromJson].[@Underlying]">
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Length" Value="50" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[varchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SysCommentsObjectAnnotation">
+				<Property Name="CreateOffset" Value="9" />
+				<Property Name="Length" Value="3428" />
+				<Property Name="StartLine" Value="1" />
+				<Property Name="StartColumn" Value="1" />
+				<Property Name="HeaderContents" Value="   &#xD;&#xA;  &#xD;&#xA;CREATE PROCEDURE [dbo].[InsertOptionDataFromJson]      &#xD;&#xA;    @Json NVARCHAR(MAX),  &#xD;&#xA;&#x9;@FetchAt DATETIME,&#xD;&#xA;&#x9;@Underlying VARCHAR(50)&#xD;&#xA;AS" />
+			</Annotation>
+		</Element>
+		<Element Type="SqlTable" Name="[dbo].[OptionChainRaw]">
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="Columns">
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw].[Id]">
+						<Property Name="IsNullable" Value="False" />
+						<Property Name="IsIdentity" Value="True" />
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw].[FetchedAt]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw].[JsonData]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="IsMax" Value="True" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw].[isProcessed]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<AttachedAnnotation Disambiguator="5" />
+		</Element>
+		<Element Type="SqlTable" Name="[dbo].[OptionChainRaw_BKP]">
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="Columns">
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw_BKP].[Id]">
+						<Property Name="IsNullable" Value="False" />
+						<Property Name="IsIdentity" Value="True" />
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw_BKP].[FetchedAt]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw_BKP].[JsonData]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="IsMax" Value="True" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionChainRaw_BKP].[isProcessed]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+		</Element>
+		<Element Type="SqlTable" Name="[dbo].[OptionData]">
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="Columns">
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Id]">
+						<Property Name="IsNullable" Value="False" />
+						<Property Name="IsIdentity" Value="True" />
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[StrikePrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="2" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[OptionType]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Length" Value="2" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[varchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[ImpliedVolatility]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[LastPrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[OI]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[PreviousClosePrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[PreviousOI]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[PreviousVolume]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[TopAskPrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[TopAskQuantity]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[TopBidPrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[TopBidQuantity]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Volume]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Delta]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Theta]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Gamma]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Vega]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[UnderlyingValue]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="8" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[Underlying]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Length" Value="50" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[varchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[OptionData].[CreatedAt]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+						<AttachedAnnotation Disambiguator="3" />
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<AttachedAnnotation Disambiguator="6" />
+		</Element>
+		<Element Type="SqlTable" Name="[dbo].[ScalpSignal]">
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="Columns">
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[Id]">
+						<Property Name="IsNullable" Value="False" />
+						<Property Name="IsIdentity" Value="True" />
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[OptionDataId]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[int]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[StrikePrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="2" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[OptionType]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Length" Value="10" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[varchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[SignalType]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Length" Value="50" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[varchar]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[SignalScore]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="4" />
+									<Property Name="Precision" Value="8" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[LastPrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[PrevLastPrice]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[PricePctChange]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="4" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[OI]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[PrevOI]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Precision" Value="18" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[OIPctChange]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="4" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[Volume]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[PrevVolume]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bigint]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[VolumePctChange]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="4" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[ImpliedVolatility]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[PrevImpliedVolatility]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[IVPctChange]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="4" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[Delta]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[Gamma]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[Vega]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="6" />
+									<Property Name="Precision" Value="9" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[decimal]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[CreatedAt]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="7" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime2]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+				<Entry>
+					<Element Type="SqlSimpleColumn" Name="[dbo].[ScalpSignal].[GeneratedAt]">
+						<Relationship Name="TypeSpecifier">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Property Name="Scale" Value="7" />
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[datetime2]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+						<AttachedAnnotation Disambiguator="4" />
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<AttachedAnnotation Disambiguator="7" />
+		</Element>
+		<Element Type="SqlProcedure" Name="[dbo].[sp_IsMarketOpen]">
+			<Property Name="BodyScript">
+				<Value><![CDATA[  
+BEGIN  
+    SET NOCOUNT ON;  
+  
+    DECLARE   
+        @Now DATETIME = GETDATE(),  
+        @DayName NVARCHAR(10) = DATENAME(WEEKDAY, GETDATE()),  
+        @StartTime TIME = '09:15:00',  
+        @EndTime TIME = '15:30:00';   
+    SET @IsOpen = 0;  
+    
+    IF @DayName IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')  
+    BEGIN   
+        IF CAST(@Now AS TIME) BETWEEN @StartTime AND @EndTime  
+        BEGIN  
+            SET @IsOpen = 1;  
+        END  
+    END   
+END;]]></Value>
+			</Property>
+			<Property Name="IsAnsiNullsOn" Value="True" />
+			<Relationship Name="BodyDependencies">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[datetime]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[nvarchar]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[time]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[time]" />
+				</Entry>
+				<Entry>
+					<References Name="[dbo].[sp_IsMarketOpen].[@IsOpen]" />
+				</Entry>
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[time]" />
+				</Entry>
+			</Relationship>
+			<Relationship Name="Parameters">
+				<Entry>
+					<Element Type="SqlSubroutineParameter" Name="[dbo].[sp_IsMarketOpen].[@IsOpen]">
+						<Property Name="IsOutput" Value="True" />
+						<Relationship Name="Type">
+							<Entry>
+								<Element Type="SqlTypeSpecifier">
+									<Relationship Name="Type">
+										<Entry>
+											<References ExternalSource="BuiltIns" Name="[bit]" />
+										</Entry>
+									</Relationship>
+								</Element>
+							</Entry>
+						</Relationship>
+					</Element>
+				</Entry>
+			</Relationship>
+			<Relationship Name="Schema">
+				<Entry>
+					<References ExternalSource="BuiltIns" Name="[dbo]" />
+				</Entry>
+			</Relationship>
+			<Annotation Type="SysCommentsObjectAnnotation">
+				<Property Name="Length" Value="582" />
+				<Property Name="StartLine" Value="1" />
+				<Property Name="StartColumn" Value="1" />
+				<Property Name="HeaderContents" Value="CREATE   PROCEDURE [dbo].[sp_IsMarketOpen]  &#xD;&#xA;    @IsOpen BIT OUTPUT  &#xD;&#xA;AS" />
+			</Annotation>
+		</Element>
+	</Model>
+</DataSchemaModel>

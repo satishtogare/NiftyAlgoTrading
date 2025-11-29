@@ -1,0 +1,25 @@
+﻿CREATE TABLE [dbo].[OptionData] (
+    [Id]                 INT             IDENTITY (1, 1) NOT NULL,
+    [StrikePrice]        DECIMAL (18, 2) NULL,
+    [OptionType]         VARCHAR (2)     NULL,
+    [ImpliedVolatility]  DECIMAL (18, 8) NULL,
+    [LastPrice]          DECIMAL (18, 8) NULL,
+    [OI]                 BIGINT          NULL,
+    [PreviousClosePrice] DECIMAL (18, 8) NULL,
+    [PreviousOI]         BIGINT          NULL,
+    [PreviousVolume]     BIGINT          NULL,
+    [TopAskPrice]        DECIMAL (18, 8) NULL,
+    [TopAskQuantity]     BIGINT          NULL,
+    [TopBidPrice]        DECIMAL (18, 8) NULL,
+    [TopBidQuantity]     BIGINT          NULL,
+    [Volume]             BIGINT          NULL,
+    [Delta]              DECIMAL (18, 8) NULL,
+    [Theta]              DECIMAL (18, 8) NULL,
+    [Gamma]              DECIMAL (18, 8) NULL,
+    [Vega]               DECIMAL (18, 8) NULL,
+    [UnderlyingValue]    DECIMAL (18, 8) NULL,
+    [Underlying]         VARCHAR (50)    NULL,
+    [CreatedAt]          DATETIME        DEFAULT (getdate()) NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+

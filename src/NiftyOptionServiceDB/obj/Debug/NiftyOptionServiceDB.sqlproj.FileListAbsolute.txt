@@ -1,0 +1,10 @@
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\bin\Debug\NiftyOptionServiceDB.dacpac
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\bin\Debug\NiftyOptionServiceDB.dll
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\bin\Debug\NiftyOptionServiceDB.pdb
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\NiftyOptionServiceDB.sqlproj.AssemblyReference.cache
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\Model.xml
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\refactor.xml
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\postdeploy.sql
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\predeploy.sql
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\NiftyOptionServiceDB.dll
+D:\WorkingFolder\OptionChainService\src\NiftyOptionServiceDB\obj\Debug\NiftyOptionServiceDB.pdb
