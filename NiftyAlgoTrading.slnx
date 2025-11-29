@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/NiftyOptionServiceDB/NiftyOptionServiceDB.sqlproj" Id="7bb6bac9-5d5f-43d0-936a-34b83bd08c44">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="src/OptionChainService/NiftyOptionChainService.csproj" />
+</Solution>
