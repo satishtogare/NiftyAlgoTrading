@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NiftyOptionChainService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+112068a0a40949d3c9ddf4399e3fe8d1293acc1a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+33292465657a57c8565665bd6f6a3e175d62126a")]
 [assembly: System.Reflection.AssemblyProductAttribute("NiftyOptionChainService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NiftyOptionChainService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

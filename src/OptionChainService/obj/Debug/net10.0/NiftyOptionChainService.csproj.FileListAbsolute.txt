@@ -98,3 +98,4 @@ D:\WorkingFolder\NiftyAlgoTrading\src\OptionChainService\obj\Debug\net10.0\refin
 D:\WorkingFolder\NiftyAlgoTrading\src\OptionChainService\obj\Debug\net10.0\NiftyOptionChainService.pdb
 D:\WorkingFolder\NiftyAlgoTrading\src\OptionChainService\obj\Debug\net10.0\NiftyOptionChainService.genruntimeconfig.cache
 D:\WorkingFolder\NiftyAlgoTrading\src\OptionChainService\obj\Debug\net10.0\ref\NiftyOptionChainService.dll
+D:\WorkingFolder\NiftyAlgoTrading\src\OptionChainService\bin\Debug\net10.0\Newtonsoft.Json.dll
