@@ -67,7 +67,7 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "Microsoft.Data.SqlClient/6.1.2": {
+      "Microsoft.Data.SqlClient/6.1.3": {
         "type": "package",
         "dependencies": {
           "Azure.Core": "1.47.1",
@@ -1281,10 +1281,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Data.SqlClient/6.1.2": {
-      "sha512": "q0GxRC0fgwfZgU14pU34ro0MW7Gs8S6NDmKCcEqymvZljT8UQa633BbEmk/Rb5upNF9NHZ3/jVm7zLiWbM8uTA==",
+    "Microsoft.Data.SqlClient/6.1.3": {
+      "sha512": "ys/z8Tx8074CDU20EilNvBRJuJdwKSthpHkzUpt3JghnjB6GjbZusoOcCtNbhPCCWsEJqN8bxaT7HnS3UZuUDQ==",
       "type": "package",
-      "path": "microsoft.data.sqlclient/6.1.2",
+      "path": "microsoft.data.sqlclient/6.1.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1337,7 +1337,7 @@
         "lib/net9.0/zh-Hant/Microsoft.Data.SqlClient.resources.dll",
         "lib/netstandard2.0/Microsoft.Data.SqlClient.dll",
         "lib/netstandard2.0/Microsoft.Data.SqlClient.xml",
-        "microsoft.data.sqlclient.6.1.2.nupkg.sha512",
+        "microsoft.data.sqlclient.6.1.3.nupkg.sha512",
         "microsoft.data.sqlclient.nuspec",
         "ref/net462/Microsoft.Data.SqlClient.dll",
         "ref/net462/Microsoft.Data.SqlClient.xml",
@@ -2851,7 +2851,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "Microsoft.Data.SqlClient >= 6.1.2",
+      "Microsoft.Data.SqlClient >= 6.1.3",
       "Microsoft.Extensions.Hosting >= 9.0.10",
       "Microsoft.Extensions.Hosting.WindowsServices >= 9.0.10",
       "Microsoft.Extensions.Http >= 9.0.10",
@@ -2865,11 +2865,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\WorkingFolder\\OptionChainService\\src\\OptionChainService\\NiftyOptionChainService.csproj",
+      "projectUniqueName": "D:\\WorkingFolder\\NiftyAlgoTrading\\src\\OptionChainService\\NiftyOptionChainService.csproj",
       "projectName": "NiftyOptionChainService",
-      "projectPath": "D:\\WorkingFolder\\OptionChainService\\src\\OptionChainService\\NiftyOptionChainService.csproj",
+      "projectPath": "D:\\WorkingFolder\\NiftyAlgoTrading\\src\\OptionChainService\\NiftyOptionChainService.csproj",
       "packagesPath": "C:\\Users\\Satish\\.nuget\\packages\\",
-      "outputPath": "D:\\WorkingFolder\\OptionChainService\\src\\OptionChainService\\obj\\",
+      "outputPath": "D:\\WorkingFolder\\NiftyAlgoTrading\\src\\OptionChainService\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2911,7 +2911,7 @@
         "dependencies": {
           "Microsoft.Data.SqlClient": {
             "target": "Package",
-            "version": "[6.1.2, )"
+            "version": "[6.1.3, )"
           },
           "Microsoft.Extensions.Hosting": {
             "target": "Package",

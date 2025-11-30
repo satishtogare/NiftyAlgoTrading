@@ -4,4 +4,5 @@
     <Deploy />
   </Project>
   <Project Path="src/OptionChainService/NiftyOptionChainService.csproj" />
+  <Project Path="src/PlaceOrder/PlaceOrder/PlaceOrder.csproj" Id="55f7573a-47cd-4b6c-98a4-211113c4da5b" />
 </Solution>
