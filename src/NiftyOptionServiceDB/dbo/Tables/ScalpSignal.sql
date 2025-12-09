@@ -22,6 +22,7 @@
     [Vega]                  DECIMAL (9, 6)  NULL,
     [CreatedAt]             DATETIME2 (7)   NULL,
     [GeneratedAt]           DATETIME2 (7)   DEFAULT (sysutcdatetime()) NULL,
+    [Diff]                  INT             NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 

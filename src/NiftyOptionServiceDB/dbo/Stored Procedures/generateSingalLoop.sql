@@ -13,7 +13,7 @@ CREATE TABLE #OptionTemp
 INSERT INTO #OptionTemp (id, FetchedAt, JsonData, Underlying)
 SELECT   Id, FetchedAt, JsonData, 'NIFTY' AS Underlying
 FROM OptionChainRaw 
-WHERE isProcessed IS NULL 
+WHERE isnull(isProcessed,0)=0 
 ORDER BY FetchedAt ASC;
 
 DECLARE @MinId BIGINT, @MaxId BIGINT;
