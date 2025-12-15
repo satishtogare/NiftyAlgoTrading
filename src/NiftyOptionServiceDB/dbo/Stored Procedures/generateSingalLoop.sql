@@ -7,11 +7,12 @@ CREATE TABLE #OptionTemp
     id INT,
     FetchedAt DATETIME,
     JsonData NVARCHAR(MAX),
-    Underlying VARCHAR(50)
+    Underlying VARCHAR(50),
+    ExpiryDate DATE
 );
 
-INSERT INTO #OptionTemp (id, FetchedAt, JsonData, Underlying)
-SELECT   Id, FetchedAt, JsonData, 'NIFTY' AS Underlying
+INSERT INTO #OptionTemp (id, FetchedAt, JsonData, Underlying,ExpiryDate)
+SELECT   Id, FetchedAt, JsonData, 'NIFTY' AS Underlying,ExpiryDate
 FROM OptionChainRaw 
 WHERE isnull(isProcessed,0)=0 
 ORDER BY FetchedAt ASC;
@@ -27,19 +28,22 @@ BEGIN
     DECLARE @FetchAt DATETIME;
     DECLARE @Underlying VARCHAR(50);
     DECLARE @id INT;
+    DECLARE @ExpiryDate DATE
 
     SELECT 
         @Json = JsonData,
         @FetchAt = FetchedAt,
         @Underlying = Underlying,
-        @id = id
+        @id = id,
+        @ExpiryDate=ExpiryDate
     FROM #OptionTemp 
     WHERE RowId = @MinId;
      
     EXEC [dbo].[InsertOptionDataFromJson]
         @Json = @Json,
         @FetchAt = @FetchAt,
-        @Underlying = @Underlying;
+        @Underlying = @Underlying,
+        @ExpiryDate=@ExpiryDate;
          
     EXEC [dbo].[GenerateScalpSignals]
 

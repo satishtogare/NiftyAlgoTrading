@@ -20,6 +20,7 @@
     [UnderlyingValue]    DECIMAL (18, 8) NULL,
     [Underlying]         VARCHAR (50)    NULL,
     [CreatedAt]          DATETIME        DEFAULT (getdate()) NULL,
+    [ExpiryDate]         DATE            NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 

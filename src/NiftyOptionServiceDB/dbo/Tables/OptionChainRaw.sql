@@ -3,6 +3,7 @@
     [FetchedAt]   DATETIME       NULL,
     [JsonData]    NVARCHAR (MAX) NULL,
     [isProcessed] INT            NULL,
+    [ExpiryDate]  DATE           NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 

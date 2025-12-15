@@ -23,6 +23,7 @@
     [CreatedAt]             DATETIME2 (7)   NULL,
     [GeneratedAt]           DATETIME2 (7)   DEFAULT (sysutcdatetime()) NULL,
     [Diff]                  INT             NULL,
+    [ExpiryDate]            DATE            NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 
