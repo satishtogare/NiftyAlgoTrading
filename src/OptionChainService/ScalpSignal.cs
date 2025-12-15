@@ -10,5 +10,6 @@
         public decimal SignalScore { get; set; }
         public decimal LastPrice { get; set; }
         public int SecondsAgo { get; set; }
+        public String symbol { get; set; }
     }
 }

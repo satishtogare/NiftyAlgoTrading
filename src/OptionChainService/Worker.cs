@@ -23,6 +23,10 @@ namespace NiftyOptionChainService
             _dhanApi = dhanApiOptions.Value;
             _connectionString = config.GetConnectionString("DefaultConnection");
 
+
+         
+
+
             _dhanApi.IsMarketOpen = IsMarketOpenAsync().Result;
             _dhanApi.isFetchMarketStatus = true;
         }
@@ -30,6 +34,7 @@ namespace NiftyOptionChainService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+              
             _logger.LogInformation("Nifty Option Chain Service started at: {time}", DateTimeOffset.Now);
 
             if (_dhanApi.isFetchedExpiryDetails == false)
@@ -73,14 +78,14 @@ namespace NiftyOptionChainService
 
                     var jsonString = await response.Content.ReadAsStringAsync(stoppingToken);
 
-                    await SaveOptionChainDataAsync(jsonString, stoppingToken);
-                    //  await generateSingalLoop(stoppingToken); 
+                    await SaveOptionChainDataAsync(jsonString,_dhanApi.nextExpiry ,stoppingToken);
+                    await PleaceSuperOrderAsync(stoppingToken);
 
                     _logger.LogInformation("Data fetched and saved at {time}", DateTimeOffset.Now);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error fetching or saving data");
+                    _logger.LogError("Error", "Error fetching or saving data");
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
@@ -170,7 +175,7 @@ namespace NiftyOptionChainService
 
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
-        private async Task SaveOptionChainDataAsync(string jsonData, CancellationToken cancellationToken)
+        private async Task SaveOptionChainDataAsync(string jsonData, string expDate, CancellationToken cancellationToken)
         {
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
@@ -184,6 +189,8 @@ namespace NiftyOptionChainService
             cmd.CommandType = System.Data.CommandType.StoredProcedure;
             //cmd.Parameters.AddWithValue("@FetchedAt", DateTime.Now);
             cmd.Parameters.AddWithValue("@JsonData", jsonData);
+            cmd.Parameters.AddWithValue("@ExpiryDate", expDate);
+            cmd.CommandTimeout = 120;
 
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -191,7 +198,7 @@ namespace NiftyOptionChainService
 
 
         //Place Order Related Code
-        private async Task<ScalpSignal> GetFreshSignal(CancellationToken cancellationToken)
+        private async Task<ScalpSignal> GetFreshSignalAsync(CancellationToken cancellationToken)
         {
 
             await using var connection = new SqlConnection(_connectionString);
@@ -210,13 +217,14 @@ namespace NiftyOptionChainService
                     return new ScalpSignal
                     {
                         Id = dr.GetInt32(dr.GetOrdinal("Id")),
+                        SecondsAgo = dr.GetInt32(dr.GetOrdinal("SecondsAgo")),
+                        symbol = dr.GetString(dr.GetOrdinal("symbol")),
                         CreatedAt = dr.GetDateTime(dr.GetOrdinal("CreatedAt")),
                         StrikePrice = dr.GetDecimal(dr.GetOrdinal("StrikePrice")),
                         OptionType = dr.GetString(dr.GetOrdinal("OptionType")),
                         SignalType = dr.GetString(dr.GetOrdinal("SignalType")),
                         SignalScore = dr.GetDecimal(dr.GetOrdinal("SignalScore")),
-                        LastPrice = dr.GetDecimal(dr.GetOrdinal("LastPrice")),
-                        SecondsAgo = dr.GetInt32(dr.GetOrdinal("SecondsAgo"))
+                        LastPrice = dr.GetDecimal(dr.GetOrdinal("LastPrice")) 
                     };
                 }
             }
@@ -228,8 +236,8 @@ namespace NiftyOptionChainService
         {
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("Client-Id", "YOUR_CLIENT_ID");
-                client.DefaultRequestHeaders.Add("Access-Token", "YOUR_ACCESS_TOKEN");
+                client.DefaultRequestHeaders.Add("Client-Id", _dhanApi.ClientId);
+                client.DefaultRequestHeaders.Add("Access-Token", _dhanApi.AccessToken);
 
                 var response = await client.GetAsync("https://api.dhan.co/positions");
                 var json = await response.Content.ReadAsStringAsync();
@@ -244,10 +252,22 @@ namespace NiftyOptionChainService
                 return positions != null && positions.Count > 0;
             }
         }
-
-        private async Task PleaceSuperOrder(CancellationToken cancellationToken)
+        private async Task InsertNewTradeAsync(int SignalId, string RequestJson, CancellationToken cancellationToken)
         {
-            var signal = await GetFreshSignal(cancellationToken);
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken); 
+
+            await using var cmd = new SqlCommand("usp_TradeBook", connection);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure; 
+            cmd.Parameters.AddWithValue("@SignalId", SignalId);
+            cmd.Parameters.AddWithValue("@RequestJson", RequestJson);
+            cmd.CommandTimeout = 120;
+
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+        private async Task PleaceSuperOrderAsync(CancellationToken cancellationToken)
+        {
+            var signal = await GetFreshSignalAsync(cancellationToken);
             if (signal == null) return;
 
             var activeTrade = await HasActiveDhanPosition();
@@ -257,28 +277,28 @@ namespace NiftyOptionChainService
                 return;
             }
 
-            string symbol = "NIFTY";
-            int qty = 50;
-            //double entryPrice = signal.LastPrice;
 
-            double _stopLoss = 3;
-            double _tsl = 2;
+            string symbol = signal.symbol; 
+            int qty = 75;
 
-            string txnType = signal.OptionType.ToUpper() == "CE" ? "BUY" : "SELL";
+            double _stopLoss = Convert.ToDouble(signal.LastPrice)-3.00;       
+            double _trailingSL = 1;    
 
             var payload = new
             {
                 symbol = symbol,
-                exchangeSegment = "NSE",
-                transactionType = txnType,
+                exchangeSegment = "NSE_FNO",
+                transactionType = "BUY",
                 quantity = qty,
                 orderType = "MARKET",
                 productType = "INTRADAY",
+                validity = "DAY",
                 legType = "Single",
                 price = 0,
                 stopLoss = _stopLoss,
-                trailingStopLoss = _tsl
+                trailingStopLoss = _trailingSL
             };
+
 
             var json = JsonConvert.SerializeObject(payload);
             Console.WriteLine("Placing Order: " + json);
@@ -286,8 +306,8 @@ namespace NiftyOptionChainService
 
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("Client-Id", "YOUR_CLIENT_ID");
-                client.DefaultRequestHeaders.Add("Access-Token", "YOUR_ACCESS_TOKEN");
+                client.DefaultRequestHeaders.Add("Client-Id", _dhanApi.ClientId);
+                client.DefaultRequestHeaders.Add("Access-Token", _dhanApi.AccessToken);
 
                 var response = await client.PostAsync(
                     "https://api.dhan.co/orders/super",
@@ -302,7 +322,7 @@ namespace NiftyOptionChainService
                     dynamic data = JsonConvert.DeserializeObject(result);
                     string orderId = data.orderId;
 
-                    // InsertNewTrade(signal, orderId, entryPrice, qty, stopLoss, tsl);
+                   await InsertNewTradeAsync(signal.Id, json, cancellationToken);
                 }
             }
         }
