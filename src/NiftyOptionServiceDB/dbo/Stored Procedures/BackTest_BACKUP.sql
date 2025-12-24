@@ -1,5 +1,5 @@
 ﻿      
-CREATE PROC [dbo].[BackTest]                
+CREATE PROC [dbo].[BackTest_BACKUP]                
  (                
   @id bigint      
     
@@ -18,14 +18,12 @@ CREATE PROC [dbo].[BackTest]
    ;with cte as (              
  select  CreatedAt as t,              
  CASE               
- WHEN (LastPrice-@LastPrice_Signal)<=-1 THEN 'STOPLOSS'               
- WHEN (LastPrice-@LastPrice_Signal)>=50 THEN 'TARGET'              
+ WHEN (LastPrice-@LastPrice_Signal)<=-2 THEN 'STOPLOSS'               
+ WHEN (LastPrice-@LastPrice_Signal)>=2 THEN 'TARGET'              
  ELSE 'ACTIVE' END STATUS,              
  *   from OptionData                 
- where  
- cast(CreatedAt as DATETIME)>=cast(cast(@CreatedAt_Signal as datetime2) as DATETIME) 
- and CAST(CreatedAt AS DATE)=cast(cast(@CreatedAt_Signal as datetime2) as date)  
- and OptionType=@OptionType_Signal and StrikePrice=@StrikePrice_Signal                
+ where  cast(CreatedAt as DATETIME)>=cast(cast(@CreatedAt_Signal as datetime2) as DATETIME) and                  
+ CAST(CreatedAt AS DATE)=cast(cast(@CreatedAt_Signal as datetime2) as date)  and OptionType=@OptionType_Signal and StrikePrice=@StrikePrice_Signal                
  --order by CreatedAt desc            
  ),    
  final as (    
