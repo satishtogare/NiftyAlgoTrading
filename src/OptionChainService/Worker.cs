@@ -311,8 +311,8 @@ namespace NiftyOptionChainService
                 quantity = 75,
                 targetPrice= signal.LastPrice+ 100,
                 //price = signal.LastPrice, 
-                stopLossPrice = signal.LastPrice-3,
-                trailingJump = 3
+                stopLossPrice = signal.LastPrice-signal.stopLoss,
+                trailingJump = signal.trailingStopLoss
             };
 
 
