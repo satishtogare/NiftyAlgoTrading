@@ -13,8 +13,7 @@ namespace NiftyOptionChainService
 {
     public class Worker : BackgroundService
     { 
-        private readonly ILogger<Worker> _logger;
-       // private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<Worker> _logger; 
         private readonly DhanApiSettings _dhanApi;
         private readonly string _connectionString;
         public Worker(ILogger<Worker> logger, IOptions<DhanApiSettings> dhanApiOptions, IConfiguration config)
@@ -34,7 +33,10 @@ namespace NiftyOptionChainService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-              
+            string logPath1 = "signals_log.txt";
+            string line1 = $"{DateTime.Now:dd-MM-yyyy HH:mm:ss} | DAY STARTED.\n"; 
+            await File.AppendAllTextAsync(logPath1, line1);
+
             _logger.LogInformation("Nifty Option Chain Service started at: {time}", DateTimeOffset.Now);
 
             if (_dhanApi.isFetchedExpiryDetails == false)
@@ -78,8 +80,17 @@ namespace NiftyOptionChainService
 
                     var jsonString = await response.Content.ReadAsStringAsync(stoppingToken);
 
-                    await SaveOptionChainDataAsync(jsonString,_dhanApi.nextExpiry ,stoppingToken);
-                    await PleaceSuperOrderAsync(stoppingToken);
+                    var now = DateTime.Now;
+
+                    if (now.TimeOfDay < new TimeSpan(15, 30, 0))
+                    {
+                        await SaveOptionChainDataAsync(jsonString, _dhanApi.nextExpiry, stoppingToken);
+                    } 
+
+                    if (now.TimeOfDay < new TimeSpan(14, 30, 0))
+                    {
+                        await PleaceSuperOrderAsync(stoppingToken);
+                    }
 
                     _logger.LogInformation("Data fetched and saved at {time}", DateTimeOffset.Now);
                 }
@@ -178,26 +189,17 @@ namespace NiftyOptionChainService
         private async Task SaveOptionChainDataAsync(string jsonData, string expDate, CancellationToken cancellationToken)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
-
-            //const string query = """
-            //INSERT INTO OptionChainRaw (FetchedAt, JsonData)
-            //VALUES (@FetchedAt, @JsonData);
-            //""";
+            await connection.OpenAsync(cancellationToken); 
 
             await using var cmd = new SqlCommand("SaveOptionChainData", connection);
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-            //cmd.Parameters.AddWithValue("@FetchedAt", DateTime.Now);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure; 
             cmd.Parameters.AddWithValue("@JsonData", jsonData);
             cmd.Parameters.AddWithValue("@ExpiryDate", expDate);
             cmd.CommandTimeout = 120;
 
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
-
-
-
-        //Place Order Related Code
+         
         private async Task<ScalpSignal> GetFreshSignalAsync(CancellationToken cancellationToken)
         {
 
@@ -222,6 +224,7 @@ namespace NiftyOptionChainService
                         CreatedAt = dr.GetDateTime(dr.GetOrdinal("CreatedAt")),
                         StrikePrice = dr.GetDecimal(dr.GetOrdinal("StrikePrice")),
                         OptionType = dr.GetString(dr.GetOrdinal("OptionType")),
+                        securityId = dr.GetString(dr.GetOrdinal("securityId")),
                         SignalType = dr.GetString(dr.GetOrdinal("SignalType")),
                         SignalScore = dr.GetDecimal(dr.GetOrdinal("SignalScore")),
                         LastPrice = dr.GetDecimal(dr.GetOrdinal("LastPrice")) 
@@ -248,11 +251,13 @@ namespace NiftyOptionChainService
                     return false;
                 }
 
-                var positions = JsonConvert.DeserializeObject<List<dynamic>>(json);
-                return positions != null && positions.Count > 0;
+                var positions = JsonConvert.DeserializeObject<List<Position>>(json);
+                return positions != null && positions.Any(p =>
+                !string.Equals(p.positionType, "closed", StringComparison.OrdinalIgnoreCase)
+                );
             }
         }
-        private async Task InsertNewTradeAsync(int SignalId, string RequestJson, CancellationToken cancellationToken)
+        private async Task InsertNewTradeAsync(int Key,int SignalId, string RequestJson, CancellationToken cancellationToken)
         {
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync(cancellationToken); 
@@ -261,70 +266,78 @@ namespace NiftyOptionChainService
             cmd.CommandType = System.Data.CommandType.StoredProcedure; 
             cmd.Parameters.AddWithValue("@SignalId", SignalId);
             cmd.Parameters.AddWithValue("@RequestJson", RequestJson);
+            cmd.Parameters.AddWithValue("@Key", Key);
             cmd.CommandTimeout = 120;
 
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
         private async Task PleaceSuperOrderAsync(CancellationToken cancellationToken)
         {
+            string logPath = "signals_log.txt";
+            string line = "";
+
             var signal = await GetFreshSignalAsync(cancellationToken);
-            if (signal == null) return;
+             if (signal == null)
+              {
+               
+                line = $"{DateTime.Now:dd-MM-yyyy HH:mm:ss} | No signal.\n";
+
+                await File.AppendAllTextAsync(logPath, line);
+                Console.WriteLine("No signal.");
+                    return;
+              }
 
             var activeTrade = await HasActiveDhanPosition();
             if (activeTrade)
-            {
+            {  
+                  line = $"{DateTime.Now:dd-MM-yyyy HH:mm:ss} | Active position exists. No new trade placed.\n";
+
+                await File.AppendAllTextAsync(logPath, line);
                 Console.WriteLine("Active position exists. No new trade placed.");
                 return;
             }
+             
 
-
-            string symbol = signal.symbol; 
-            int qty = 75;
-
-            double _stopLoss = Convert.ToDouble(signal.LastPrice)-3.00;       
-            double _trailingSL = 1;    
 
             var payload = new
             {
-                symbol = symbol,
-                exchangeSegment = "NSE_FNO",
+                dhanClientId = _dhanApi.ClientId,
+                correlationId = "123abc678",
                 transactionType = "BUY",
-                quantity = qty,
-                orderType = "MARKET",
+                exchangeSegment = "NSE_FNO",
                 productType = "INTRADAY",
-                validity = "DAY",
-                legType = "Single",
-                price = 0,
-                stopLoss = _stopLoss,
-                trailingStopLoss = _trailingSL
+                orderType = "MARKET", 
+                securityId =signal.securityId,
+                quantity = 75,
+                targetPrice= signal.LastPrice+ 100,
+                //price = signal.LastPrice, 
+                stopLossPrice = signal.LastPrice-3,
+                trailingJump = 3
             };
 
 
-            var json = JsonConvert.SerializeObject(payload);
-            Console.WriteLine("Placing Order: " + json);
 
+            var json = JsonConvert.SerializeObject(payload); 
 
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("Client-Id", _dhanApi.ClientId);
-                client.DefaultRequestHeaders.Add("Access-Token", _dhanApi.AccessToken);
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromMinutes(5);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.dhan.co/v2/super/orders");
+            request.Headers.Add("access-token", _dhanApi.AccessToken);
+            request.Headers.Add("client-id", _dhanApi.ClientId);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync(
-                    "https://api.dhan.co/orders/super",
-                    new StringContent(json, Encoding.UTF8, "application/json")
-                );
+                var response = await httpClient.SendAsync(request, cancellationToken);
 
-                var result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("DHAN Response: " + result);
+            await InsertNewTradeAsync(1,signal.Id, json, cancellationToken);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    dynamic data = JsonConvert.DeserializeObject(result);
-                    string orderId = data.orderId;
+            var result = await response.Content.ReadAsStringAsync();
+            await InsertNewTradeAsync(2, signal.Id, result, cancellationToken);
 
-                   await InsertNewTradeAsync(signal.Id, json, cancellationToken);
-                }
-            }
+            if (response.IsSuccessStatusCode)
+                { 
+                   await InsertNewTradeAsync(3,signal.Id, json, cancellationToken);
+                } 
+        }
         }
     }
-}
+ 

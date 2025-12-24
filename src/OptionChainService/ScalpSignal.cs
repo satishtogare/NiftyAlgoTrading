@@ -11,5 +11,6 @@
         public decimal LastPrice { get; set; }
         public int SecondsAgo { get; set; }
         public String symbol { get; set; }
+        public String securityId { get; set; }
     }
 }
